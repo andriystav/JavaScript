@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Лабораторна робота №4</title>
+    <!-- Стилі зроблені тут, щоб не використовувати CSS3 за межами стандартних властивостей -->
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .tabs { margin-bottom: 15px; }
+        .tab-btn { padding: 8px 16px; cursor: pointer; border: 1px solid #ccc; background: #f0f0f0; margin-right: 5px; }
+        .tab-btn.active { background: #007bff; color: white; border-color: #0056b3; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .form-container { margin-bottom: 15px; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+        .form-container input, .form-container select { margin-right: 10px; padding: 5px; margin-bottom: 8px; }
+        .form-group { margin-bottom: 10px; }
+        .error-popup { position: fixed; top: 20px; right: 20px; background: #ff4d4d; color: white; padding: 10px 20px; border-radius: 4px; display: none; z-index: 1000; }
+        .editable { cursor: pointer; background-color: #ffffe0; }
+        .badge { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; margin-right: 4px; display: inline-block; margin-bottom: 2px; font-size: 13px; }
+        .home-section { line-height: 1.6; max-width: 900px; }
+        .home-section h3 { margin-top: 20px; color: #333; }
+    </style>
+</head>
+<body>
+
+    <h1>Система управління кафедрою (Лаб. робота №4)</h1>
+    
+    <div id="errorPopup" class="error-popup"></div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('home')">Головна</button>
+        <button class="tab-btn" onclick="switchTab('teachers')">Викладачі</button>
+        <button class="tab-btn" onclick="switchTab('disciplines')">Дисципліни</button>
+        <button class="tab-btn" onclick="switchTab('groups')">Групи студентів</button>
+    </div>
+
+    <!-- ТАБ 0: Головна (Опис логіки БД та фільтрів) -->
+    <div id="home" class="tab-content active home-section">
+        <h2>Про систему та архітектуру бази даних</h2>
+        <p>Цей вебзастосунок реалізує інформаційну систему обліку навчального процесу кафедри. Усі дані зберігаються у браузері за допомогою localStorage з підтримкою автоматичної синхронізації в реальному часі між кількома відкритими вкладками.</p>
+
+        <h3>Логіка сутностей та зв'язків</h3>
+        <ul>
+            <li><strong>Викладачі кафедри:</strong> містять ПІБ, посаду (професор, доцент, асистент) та науковий ступінь. Реалізовано захист від дублювання (неможливо додати повністю ідентичного викладача).</li>
+            <li><strong>Дисципліни:</strong> містять назву, курс та обсяг кредитів. У таблиці дисциплін динамічно виводяться ті викладачі, які <em>реально</em> призначені читати цю дисципліну групам (на основі закладинки «Групи»).</li>
+            <li><strong>Групи студентів:</strong> містять назву групи, спеціальність, курс та кількість студентів. Кожна група закріплена за конкретним викладачем та вивчає певну дисципліну. Захист від видалення блокує видалення групи, якщо в ній заповнені поля викладача або дисципліни.</li>
+        </ul>
+
+        <h3>Використані фільтри</h3>
+        <ul>
+            <li><strong>Фільтрація дисциплін за курсом:</strong> під час створення групи або редагування її дисципліни безпосередньо в таблиці, випадаючий список автоматично фільтрує дисципліни так, щоб користувач міг обрати лише ті, які відповідають навчальному курсу цієї групи.</li>
+            <li><strong>Фільтрація у випадаючих списках:</strong> списки викладачів та дисциплін у формах та комірках таблиць генеруються динамічно на основі актуального стану сутностей, виключаючи ручне введення некоректних даних.</li>
+        </ul>
+    </div>
+
+    <!-- ТАБ 1: Викладачі -->
+    <div id="teachers" class="tab-content">
+        <h2>Викладачі кафедри</h2>
+        <div class="form-container">
+            <h3>Додати викладача</h3>
+            <div class="form-group"><input type="text" id="tName" placeholder="ПІБ викладача" style="width: 250px;"></div>
+            <div class="form-group">
+                <select id="tPosition" style="width: 264px;">
+                    <option value="Професор">Професор</option>
+                    <option value="Доцент">Доцент</option>
+                    <option value="Асистент">Асистент</option>
+                </select>
+            </div>
+            <div class="form-group"><input type="text" id="tDegree" placeholder="Науковий ступінь" style="width: 250px;"></div>
+            
+            <button onclick="addTeacher()">Додати викладача</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ПІБ</th>
+                    <th>Посада</th>
+                    <th>Науковий ступінь</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody id="teachersTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- ТАБ 2: Дисципліни -->
+    <div id="disciplines" class="tab-content">
+        <h2>Дисципліни</h2>
+        <div class="form-container">
+            <h3>Додати дисципліну</h3>
+            <input type="text" id="dName" placeholder="Назва дисципліни">
+            <input type="number" id="dCourse" placeholder="Курс" min="1" max="6">
+            <input type="number" id="dCredits" placeholder="Обсяг кредитів" min="2">
+            <button onclick="addDiscipline()">Додати дисципліну</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Назва</th>
+                    <th>Курс</th>
+                    <th>Обсяг </th>
+                    <th>Викладачі, які реалізують навантаження (ПІБ)</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody id="disciplinesTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- ТАБ 3: Групи студентів -->
+    <div id="groups" class="tab-content">
+        <h2>Групи студентів</h2>
+        <div class="form-container">
+            <h3>Додати групу</h3>
+            <input type="text" id="gName" placeholder="Назва групи">
+            <input type="text" id="gSpecialty" placeholder="Спеціальність">
+            <input type="number" id="gCourse" placeholder="Курс" min="1" max="6" oninput="updateGroupFormDisciplines()">
+            <input type="number" id="gCount" placeholder="Кількість студентів" min="1">
+            
+            <label for="gTeacherSelect">Викладач:</label>
+            <select id="gTeacherSelect"></select>
+
+            <label for="gDisciplineSelect">Дисципліна:</label>
+            <select id="gDisciplineSelect"></select>
+
+            <button onclick="addGroup()">Додати групу</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Назва групи</th>
+                    <th>Спеціальність</th>
+                    <th>Курс</th>
+                    <th>Кількість студентів</th>
+                    <th>Викладач</th>
+                    <th>Дисципліна</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody id="groupsTableBody"></tbody>
+        </table>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

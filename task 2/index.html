@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Лабораторна робота №2</title>
+    <!-- Стилі зроблені тут, щоб не використовувати CSS3 за межами стандартних властивостей -->
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .tabs { margin-bottom: 15px; }
+        .tab-btn { padding: 8px 16px; cursor: pointer; border: 1px solid #ccc; background: #f0f0f0; margin-right: 5px; }
+        .tab-btn.active { background: #007bff; color: white; border-color: #0056b3; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .form-container { margin-bottom: 15px; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+        .form-container input, .form-container select { margin-right: 10px; padding: 5px; margin-bottom: 8px; }
+        .form-group { margin-bottom: 10px; }
+        .error-popup { position: fixed; top: 20px; right: 20px; background: #ff4d4d; color: white; padding: 10px 20px; border-radius: 4px; display: none; z-index: 1000; }
+    </style>
+</head>
+<body>
+
+    <h1>Система управління кафедрою (Лаб. робота №2)</h1>
+    
+    <div id="errorPopup" class="error-popup"></div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('teachers')">Викладачі</button>
+        <button class="tab-btn" onclick="switchTab('disciplines')">Дисципліни</button>
+        <button class="tab-btn" onclick="switchTab('groups')">Групи студентів</button>
+    </div>
+
+    <!-- ТАБ 1: Викладачі -->
+    <div id="teachers" class="tab-content active">
+        <h2>Викладачі кафедри</h2>
+        <div class="form-container">
+            <h3>Додати викладача</h3>
+            <div class="form-group"><input type="text" id="tName" placeholder="ПІБ викладача" style="width: 250px;"></div>
+            <div class="form-group">
+                <select id="tPosition" style="width: 264px;">
+                    <option value="Професор">Професор</option>
+                    <option value="Доцент">Доцент</option>
+                    <option value="Асистент">Асистент</option>
+                </select>
+            </div>
+            <div class="form-group"><input type="text" id="tDegree" placeholder="Науковий ступінь" style="width: 250px;"></div>
+            <button onclick="addTeacher()">Додати викладача</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ПІБ</th>
+                    <th>Посада</th>
+                    <th>Науковий ступінь</th>
+                </tr>
+            </thead>
+            <tbody id="teachersTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- ТАБ 2: Дисципліни -->
+    <div id="disciplines" class="tab-content">
+        <h2>Дисципліни</h2>
+        <div class="form-container">
+            <h3>Додати дисципліну</h3>
+            <input type="text" id="dName" placeholder="Назва дисципліни">
+            <input type="number" id="dCourse" placeholder="Курс" min="1" max="6">
+            <input type="number" id="dCredits" placeholder="Обсяг кредитів" min="2">
+            <button onclick="addDiscipline()">Додати дисципліну</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Назва</th>
+                    <th>Курс</th>
+                    <th>Обсяг (кредити)</th>
+                </tr>
+            </thead>
+            <tbody id="disciplinesTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- ТАБ 3: Групи студентів -->
+    <div id="groups" class="tab-content">
+        <h2>Групи студентів</h2>
+        <div class="form-container">
+            <h3>Додати групу</h3>
+            <input type="text" id="gName" placeholder="Назва групи">
+            <input type="text" id="gSpecialty" placeholder="Спеціальність">
+            <input type="number" id="gCourse" placeholder="Курс" min="1" max="6" oninput="updateGroupFormDisciplines()">
+            <input type="number" id="gCount" placeholder="Кількість студентів" min="1">
+            
+            <label for="gTeacherSelect">Викладач:</label>
+            <select id="gTeacherSelect"></select>
+
+            <label for="gDisciplineSelect">Дисципліна:</label>
+            <select id="gDisciplineSelect"></select>
+
+            <button onclick="addGroup()">Додати групу</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Назва групи</th>
+                    <th>Спеціальність</th>
+                    <th>Курс</th>
+                    <th>Кількість студентів</th>
+                    <th>Викладач</th>
+                    <th>Дисципліна</th>
+                </tr>
+            </thead>
+            <tbody id="groupsTableBody"></tbody>
+        </table>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
