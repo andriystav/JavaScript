@@ -52,11 +52,20 @@ const DEFAULT_DATA = {
     ]
 };
 
+const STORAGE_KEY = "kafedra_app_state_v8";
+
 function loadState() {
     try {
-        const saved = localStorage.getItem("kafedra_app_state_v8");
-        if (saved) return JSON.parse(saved);
-    } catch (e) { console.error(e); }
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (e) { 
+        console.error("Помилка читання localStorage:", e); 
+    }
+    
+    // Якщо сховище не ініціалізоване, записуємо туди початкові дані за замовчуванням
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_DATA));
     return DEFAULT_DATA;
 }
 
@@ -64,14 +73,14 @@ let appState = loadState();
 
 function saveState() {
     try {
-        localStorage.setItem("kafedra_app_state_v8", JSON.stringify(appState));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
     } catch (e) {
         showError("Помилка збереження localStorage.");
     }
 }
 
 window.addEventListener("storage", (event) => {
-    if (event.key === "kafedra_app_state_v8" && event.newValue) {
+    if (event.key === STORAGE_KEY && event.newValue) {
         appState = JSON.parse(event.newValue);
         renderAll();
     }
